@@ -27,7 +27,7 @@ jobs:
           ISSUE_BODY: ${{ github.event.issue.body }}
           REPO_NAME: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python llm_scripts/call_LLM.py
+        run: python llm_scripts/call_llm_task.py
 
       - name: Commit updated PlantUML file
         run: |
