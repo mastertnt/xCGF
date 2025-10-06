@@ -14,13 +14,13 @@ def load_issue(issue_path: Path) -> Any | None:
 
 def load_config(config_path: Path) -> dict:
     if not config_path.exists():
-        raise FileNotFoundError(f"❌ Configuration file not found : {config_path}")
+        raise FileNotFoundError(f"Configuration file not found : {config_path}")
     with config_path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
 def reaf_file(path: Path) -> str:
     if not path.exists():
-        print(f"⚠️  Design file not found : {path}")
+        print(f"Design file not found : {path}")
         return ""
     return path.read_text(encoding="utf-8")
 
@@ -67,8 +67,8 @@ def run_llm_task(issue_title, issue_body, config):
         data=json.dumps(payload),
     )
 
-    PAYLOAD_FILE = Path("payload.json")
-    PAYLOAD_FILE.write_text(json.dumps(payload), encoding="utf-8")
+    payload_file = Path("payload.json")
+    payload_file.write_text(json.dumps(payload), encoding="utf-8")
 
     print(response.status_code)
     if response.status_code != 200:
@@ -84,7 +84,7 @@ def run_llm_task(issue_title, issue_body, config):
     output_file.parent.mkdir(parents=True, exist_ok=True)
     output_file.write_text(llm_output, encoding="utf-8")
 
-    print("✅ ECS architecture diagram merged and updated successfully.")
+    print("LLM task ran successfully.")
 
 def main():
     parser = argparse.ArgumentParser(description="ECS LLM.")
@@ -114,11 +114,11 @@ def main():
     print(config["role"])
 
     if issue_title and issue_body:
-        print(f"🧩 Processing issue: {issue_title}")
+        print(f"Processing issue: {issue_title}")
         run_llm_task(issue_title, issue_body, config)
-        print(f"🏁 Done.")
+        print(f"Done.")
     else:
-        print("⚠️ No issue provided.")
+        print("No issue provided.")
 
 
 if __name__ == "__main__":
