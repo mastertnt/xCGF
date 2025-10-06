@@ -1,0 +1,14 @@
+{
+  "role" :  "C++ developer",
+  "llm": {
+    "base_url": "http://localhost:1234/v1",
+    "model": "qwen/qwen3-coder-30b"
+  },
+  "files": {
+    "input": "docs/ecs_architecture.puml",
+    "output": "docs/ecs_architecture_updated.puml"
+  },
+  "prompt": {
+    "system": "Prompt_CGF_ECS_Developer.md"
+  }
+}
