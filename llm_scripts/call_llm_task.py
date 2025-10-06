@@ -93,9 +93,13 @@ def main():
     args = parser.parse_args()
 
     issue = load_issue(Path(args.issue))
-
-    issue_title = issue["title"] or os.getenv("ISSUE_TITLE", "")
-    issue_body = issue["body"] or os.getenv("ISSUE_BODY", "")
+    
+    if issue is not None:
+        issue_title = issue["title"]
+        issue_body = issue["body"]
+    else:
+        issue_title = os.getenv("ISSUE_TITLE", "")
+        issue_body = os.getenv("ISSUE_BODY", "")
 
     config_path = Path(args.config)
     config = load_config(config_path)
