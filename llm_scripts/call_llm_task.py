@@ -77,10 +77,7 @@ def run_llm_task(issue_title, issue_body, config):
     resp_json  = response.json()
     llm_output = resp_json["choices"][0]["message"]["content"]
 
-    print(llm_output)
-
     # --- Écriture finale ---
-    #final_text = f"@startuml\n{merged_body}\n@enduml\n"
     output_file.parent.mkdir(parents=True, exist_ok=True)
     output_file.write_text(llm_output, encoding="utf-8")
 
