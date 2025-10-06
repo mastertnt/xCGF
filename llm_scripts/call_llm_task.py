@@ -93,10 +93,12 @@ def main():
     args = parser.parse_args()
 
     issue_path = Path(args.issue)
+    config_path = Path(args.config)
+
+    print("Issue Path " + str(issue_path.resolve()))
+    print("Configuration Path " + str(config_path.resolve()))
+
     issue = load_issue(issue_path)
-    
-    print("Issue Path " + issue_path.resolve())
-    print("Configuration Path " + config_path.resolve())
 
     if issue is not None:
         issue_title = issue["title"]
