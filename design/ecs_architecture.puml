@@ -1,0 +1,47 @@
+@startuml
+package "DataTypes" {
+    class GeocentricPosition {
+        +X: double
+        +Y: double
+        +Z: double
+    }
+
+    class Attitude {
+        +Yaw: double
+        +Pitch: double
+        +Roll: double
+    }
+
+    class Velocity {
+        +X: double
+        +Y: double
+        +Z: double
+    }
+}
+
+package "Components" {
+    class AircraftKinematic {
+        +Position: GeocentricPosition
+        +Attitude: Attitude
+        +Velocity: Velocity
+        +LoadFactor: double
+    }
+}
+
+package "Systems" {
+    class AircraftKinematicSystem {
+        * update(entityId, dt)
+    }
+
+    note right of AircraftKinematicSystem
+      Purpose: Update kinematic state each simulation tick.
+      Design Principles:
+      - Read current AircraftKinematic component.
+      - Compute new position using velocity and time step (Euler integration).
+      - Apply physics or control logic to adjust attitude or load factor if needed.
+      - Write back updated values to the component.
+    end note
+}
+
+AircraftKinematic --> AircraftKinematicSystem : used by
+@enduml

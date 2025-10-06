@@ -1,0 +1,38 @@
+name: Architecture Auto-Update
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+jobs:
+  generate_architecture:
+    if: contains(github.event.issue.labels.*.name, 'architecture')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run LLM-based architecture generator
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          REPO_NAME: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python llm_scripts/call_llm.py
+
+      - name: Commit updated PlantUML file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/architecture.puml
+          git commit -m "Auto-update architecture.puml from issue #${{ github.event.issue.number }}"
+          git push
