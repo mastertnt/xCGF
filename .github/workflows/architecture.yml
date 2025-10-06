@@ -21,6 +21,28 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
+      - name: Define branch name
+        id: branch
+        run: |
+          ISSUE_NUMBER=${{ github.event.issue.number }}
+          ISSUE_TITLE=${{ github.event.issue.title }}
+          # Nettoyer le titre pour l'utiliser dans le nom de la branche
+          SAFE_TITLE=$(echo "$ISSUE_TITLE" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9-' | cut -c1-30)
+          BRANCH_NAME="issue-${ISSUE_NUMBER}-${SAFE_TITLE:-architecture}"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create or switch to branch
+        run: |
+          git fetch origin
+          if git show-ref --verify --quiet "refs/remotes/origin/${{ steps.branch.outputs.branch_name }}"; then
+            echo "Branch already exists. Checking it out."
+            git checkout ${{ steps.branch.outputs.branch_name }}
+            git pull origin ${{ steps.branch.outputs.branch_name }}
+          else
+            echo "Creating new branch."
+            git checkout -b ${{ steps.branch.outputs.branch_name }}
+          fi
+
       - name: Run LLM-based generator
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
@@ -29,10 +51,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python llm_scripts/call_llm_task.py --config=llm_scripts/architect_design.json
 
-      - name: Commit updated PlantUML file
+      - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/architecture.puml
-          git commit -m "Auto-update architecture.puml from issue #${{ github.event.issue.number }}"
-          git push
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto-update from issue #${{ github.event.issue.number }}"
+            git push origin ${{ steps.branch.outputs.branch_name }}
+          fi
