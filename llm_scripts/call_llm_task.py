@@ -92,10 +92,12 @@ def main():
     parser.add_argument("--config", default="architect_design.json", help="Path to the configuration JSON file")
     args = parser.parse_args()
 
-    issue = load_issue(Path(args.issue))
-
-    )
+    issue_path = Path(args.issue)
+    issue = load_issue(issue_path)
     
+    print("Issue Path " + issue_path.resolve())
+    print("Configuration Path " + config_path.resolve())
+
     if issue is not None:
         issue_title = issue["title"]
         issue_body = issue["body"]
@@ -104,7 +106,7 @@ def main():
         issue_body = os.getenv("ISSUE_BODY", "")
 
     config_path = Path(args.config)
-    print("Configuration Path " + config_path.resolve())
+    
     config = load_config(config_path)
 
     print(config["role"])
