@@ -21,46 +21,10 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Define branch name
-        id: branch
+      - name: Create Issue Branch
+        uses: robvanderleek/create-issue-branch@main
         env:
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-        # for safety force bash (some self-hosted runners default to sh/dash)
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          # assure variables
-          ISSUE_NUMBER="${ISSUE_NUMBER}"
-          ISSUE_TITLE="${ISSUE_TITLE:-architecture}"
-
-          # try to transliterate non-ascii -> ascii (if iconv présent),
-          # sinon on continue avec la chaîne originale
-          SAFE_TITLE="$(printf "%s" "$ISSUE_TITLE" | iconv -c -t ASCII//TRANSLIT 2>/dev/null || printf "%s" "$ISSUE_TITLE")"
-
-          # lowercase
-          SAFE_TITLE="$(printf "%s" "$SAFE_TITLE" | tr '[:upper:]' '[:lower:]')"
-
-          # remplacer tout caractère non alphanumérique par un tiret,
-          # compacter les tirets consécutifs, supprimer tirets de tête/queue
-          SAFE_TITLE="$(printf "%s" "$SAFE_TITLE" | sed 's/[^a-z0-9]/-/g; s/-\+/-/g; s/^-//; s/-$//')"
-
-          # tronquer à 30 caractères (bash substring)
-          SAFE_TITLE="${SAFE_TITLE:0:30}"
-
-          # fallback si tout est filtré
-          if [ -z "$SAFE_TITLE" ]; then
-            SAFE_TITLE="architecture"
-          fi
-
-          BRANCH_NAME="issue-${ISSUE_NUMBER}-${SAFE_TITLE}"
-
-          # exporter en output GitHub Actions (méthode recommandée)
-          echo "branch_name=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
-
-          # debug (facultatif — retirez les deux lignes en prod)
-          echo "Computed branch name: ${BRANCH_NAME}"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Create or switch to branch
         run: |
