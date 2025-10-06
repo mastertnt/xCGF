@@ -7,7 +7,7 @@ on:
 jobs:
   generate_architecture:
     if: contains(github.event.issue.labels.*.name, 'architecture')
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout repository
