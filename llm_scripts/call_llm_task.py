@@ -93,6 +93,8 @@ def main():
     args = parser.parse_args()
 
     issue = load_issue(Path(args.issue))
+
+    )
     
     if issue is not None:
         issue_title = issue["title"]
