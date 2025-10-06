@@ -102,6 +102,7 @@ def main():
         issue_body = os.getenv("ISSUE_BODY", "")
 
     config_path = Path(args.config)
+    print("Configuration Path " + config_path.resolve())
     config = load_config(config_path)
 
     print(config["role"])
