@@ -4,6 +4,10 @@ on:
   issues:
     types: [opened, edited, labeled]
 
+permissions:
+  contents: write
+  issues: read
+
 jobs:
   generate_architecture:
     if: contains(github.event.issue.labels.*.name, 'architecture')
