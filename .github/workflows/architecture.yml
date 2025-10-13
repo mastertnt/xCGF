@@ -19,7 +19,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install requests
+        run:  pip install requests PyGithub
 
       - name: Create Issue or Update Branch
         id: branch
