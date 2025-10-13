@@ -21,22 +21,15 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Create Issue Branch
-        uses: robvanderleek/create-issue-branch@main
+      - name: Create Issue or Update Branch
+        id: branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Create or switch to branch
-        run: |
-          git fetch origin
-          if git show-ref --verify --quiet "refs/remotes/origin/${{ steps.branch.outputs.branch_name }}"; then
-            echo "Branch already exists. Checking it out."
-            git checkout ${{ steps.branch.outputs.branch_name }}
-            git pull origin ${{ steps.branch.outputs.branch_name }}
-          else
-            echo "Creating new branch."
-            git checkout -b ${{ steps.branch.outputs.branch_name }}
-          fi
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_LABELS: ${{ toJson(github.event.issue.labels) }}
+        run: python .github/scripts/create_branch_from_issue.py
 
       - name: Run LLM-based generator
         env:
@@ -44,16 +37,4 @@ jobs:
           ISSUE_BODY: ${{ github.event.issue.body }}
           REPO_NAME: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python llm_scripts/call_llm_task.py --config=llm_scripts/architect_design.json
-
-      - name: Commit and push changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "Auto-update from issue #${{ github.event.issue.number }}"
-            git push origin ${{ steps.branch.outputs.branch_name }}
-          fi
+        run: python llm_scripts/call_llm_task.py --config=llm_scripts/architect_design.json  
