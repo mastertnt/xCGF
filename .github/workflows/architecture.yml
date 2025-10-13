@@ -29,6 +29,7 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
           ISSUE_LABELS: ${{ toJson(github.event.issue.labels) }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: python .github/python/switch_or_create_branch_from_issue.py
 
       - name: Run LLM-based generator
