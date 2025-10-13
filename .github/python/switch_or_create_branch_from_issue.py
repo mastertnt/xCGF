@@ -1,27 +1,52 @@
 import os
+import re
+import json
 import logging
 from github import Github
 
-# Configure console logging
+# Configure console logger
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s: %(message)s"
 )
 logger = logging.getLogger(__name__)
 
+
+def sanitize_branch_name(name: str) -> str:
+    """Convert a string into a safe Git branch name."""
+    name = name.lower()
+    name = re.sub(r"[^\w\-]+", "-", name)
+    name = re.sub(r"-+", "-", name).strip("-")
+    return name[:80]  # limit length for safety
+
+
 def main():
-    token = os.environ.get("GITHUB_TOKEN")
-    repo_name = os.environ.get("GITHUB_REPOSITORY")
-    branch_name = os.environ.get("BRANCH_NAME")
-    base_branch = os.environ.get("BASE_BRANCH")
+    token = os.environ["GITHUB_TOKEN"]
+    repo_name = os.environ["GITHUB_REPOSITORY"]
+    issue_number = os.environ["ISSUE_NUMBER"]
+    issue_title = os.environ["ISSUE_TITLE"]
+    issue_labels = os.environ.get("ISSUE_LABELS", "[]")
 
-    if not token or not repo_name or not branch_name or not base_branch:
-        logger.error("Missing one or more required environment variables.")
-        exit(1)
-
-    logger.info(f"Connecting to GitHub repository '{repo_name}'...")
     g = Github(token)
     repo = g.get_repo(repo_name)
+
+    # Determine issue type from labels (default to "task")
+    labels = [lbl["name"].lower() for lbl in json.loads(issue_labels)]
+    branch_type = "task"
+    for label in labels:
+        if label in ["bug", "fix"]:
+            branch_type = "bugfix"
+        elif label in ["feature", "enhancement"]:
+            branch_type = "feature"
+        elif label in ["chore", "maintenance"]:
+            branch_type = "chore"
+
+    # Build branch name
+    safe_title = sanitize_branch_name(issue_title)
+    branch_name = f"{branch_type}/{issue_number}-{safe_title}"
+    base_branch = "main"
+
+    logger.info(f"Creating or switching to branch for issue #{issue_number}: '{branch_name}'")
 
     # Get the base branch
     try:
@@ -31,9 +56,9 @@ def main():
         logger.error(f"Base branch '{base_branch}' not found: {e}")
         exit(1)
 
-    # Check if the target branch exists
+    # Check if branch already exists
     try:
-        ref = repo.get_git_ref(f"heads/{branch_name}")
+        repo.get_git_ref(f"heads/{branch_name}")
         logger.info(f"Branch '{branch_name}' already exists.")
     except Exception:
         logger.info(f"Branch '{branch_name}' does not exist. Creating from '{base_branch}'...")
@@ -44,7 +69,7 @@ def main():
             logger.error(f"Failed to create branch '{branch_name}': {e}")
             exit(1)
 
-    # Confirm the final reference
+    # Verify branch
     try:
         branch_ref = repo.get_git_ref(f"heads/{branch_name}")
         commit = repo.get_commit(branch_ref.object.sha)
