@@ -6,7 +6,7 @@
   },
   "files": {
     "input": "docs/ecs_architecture.puml",
-    "output": "docs/ecs_architecture_updated.puml"
+    "output": "docs/ecs_architecture.puml"
   },
   "prompt": {
     "system": "Prompt_CGF_ECS_Architect.md"
