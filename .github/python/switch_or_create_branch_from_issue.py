@@ -44,7 +44,7 @@ def main():
     # Build branch name
     safe_title = sanitize_branch_name(issue_title)
     branch_name = f"{branch_type}/{issue_number}-{safe_title}"
-    base_branch = "main"
+    base_branch = "master"
 
     logger.info(f"Creating or switching to branch for issue #{issue_number}: '{branch_name}'")
 
