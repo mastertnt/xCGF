@@ -1,3 +1,58 @@
+Below is a minimal, but complete, extension of your current ECS‑style diagram that adds a **GroundKinematic** component (and an optional system) so you can model the vehicle’s ground‑based state.  
+Feel free to drop it into the same PlantUML file or copy‑paste it as a separate fragment.
+
+---
+
+## 1. New Component – `GroundKinematic`
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| **Latitude** | double | Geodetic latitude (degrees) |
+| **Longitude** | double | Geodetic longitude (degrees) |
+| **Altitude** | double | Height above mean sea level (meters) |
+| **Speed** | double | Ground speed (m s⁻¹) |
+| **Heading** | double | True heading (degrees from north) |
+| **Pitch** | double | Pitch angle of the vehicle relative to the ground (deg) |
+| **Roll** | double | Roll angle (deg) |
+| **LoadFactor** | double | Lateral load factor experienced on the ground (g‑units) |
+
+> **Why these fields?**  
+> *Latitude/Longitude* let you place the vehicle anywhere on Earth.  
+> *Altitude* is optional if you only care about ground level, but it keeps the component reusable for low‑altitude flights or hover modes.  
+> *Speed & Heading* are the natural kinematic descriptors for a moving object over the surface.  
+> *Pitch/Roll* capture the vehicle’s attitude relative to the horizon (useful for wheeled vehicles or drones on the ground).  
+> *LoadFactor* can be used by physics engines that need to know whether the vehicle is experiencing g‑forces while rolling, turning, etc.
+
+---
+
+## 2. Optional System – `GroundKinematicSystem`
+
+If you want automatic updates each simulation tick (just like `AircraftKinematicSystem`), add:
+
+```plantuml
+class GroundKinematicSystem {
+    * update(entityId, dt)
+}
+```
+
+**Design note:**  
+- Read the current `GroundKinematic`.  
+- Update position via simple Euler integration:  
+
+  ```text
+  newLat = oldLat + (Speed * cos(Heading) / R_Earth) * dt
+  newLon = oldLon + (Speed * sin(Heading) / (R_Earth * cos(oldLat))) * dt
+  ```
+
+  where `R_Earth ≈ 6371 km`.  
+- Update heading, speed, pitch/roll if your vehicle has control inputs or is affected by wind.  
+- Write back the new component.
+
+---
+
+## 3. Updated PlantUML Fragment
+
+```plantuml
 @startuml
 package "DataTypes" {
     class GeocentricPosition {
@@ -26,6 +81,17 @@ package "Components" {
         +Velocity: Velocity
         +LoadFactor: double
     }
+
+    class GroundKinematic {
+        +Latitude: double
+        +Longitude: double
+        +Altitude: double
+        +Speed: double
+        +Heading: double
+        +Pitch: double
+        +Roll: double
+        +LoadFactor: double
+    }
 }
 
 package "Systems" {
@@ -41,7 +107,34 @@ package "Systems" {
       - Apply physics or control logic to adjust attitude or load factor if needed.
       - Write back updated values to the component.
     end note
+
+    class GroundKinematicSystem {
+        * update(entityId, dt)
+    }
+
+    note right of GroundKinematicSystem
+      Purpose: Update ground‑based kinematics each simulation tick.
+      Design Principles:
+      - Convert Speed & Heading into ΔLatitude/ΔLongitude using Earth radius.
+      - Apply heading changes and speed variations from controls or physics.
+      - Adjust Pitch/Roll if the vehicle is rolling, turning, or on uneven terrain.
+      - Write back updated values to the component.
+    end note
 }
 
 AircraftKinematic --> AircraftKinematicSystem : used by
+GroundKinematic --> GroundKinematicSystem : used by
 @enduml
+```
+
+---
+
+### How to use it
+
+1. **Add an entity** that owns both `AircraftKinematic` *and* `GroundKinematic` if you need both representations (e.g., a ground‑based drone).  
+2. If the vehicle is purely ground‑based, just attach `GroundKinematic`.  
+3. Hook up the corresponding system(s) in your ECS scheduler so that each tick calls `update(entityId, dt)`.
+
+---
+
+Feel free to tweak field names or units (e.g., radians vs degrees) to match the rest of your codebase. If you need a more sophisticated integration method (RK4, trapezoidal, etc.) just swap out the Euler step in the system’s comment. Happy modeling!
