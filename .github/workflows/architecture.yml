@@ -43,3 +43,15 @@ jobs:
           REPO_NAME: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python llm_scripts/call_llm_task.py --config=llm_scripts/architect_design.json  
+
+      - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_LABELS: ${{ toJson(github.event.issue.labels) }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          COMMIT_MESSAGE: ${{ github.event.issue.title }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: python .github/python/commit_changes.py
